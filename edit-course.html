@@ -29,7 +29,6 @@
             }
         }
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/@mux/mux-uploader"></script>
 </head>
 <body class="antialiased">
     <div class="fixed top-0 left-0 w-full h-full overflow-hidden -z-10">
@@ -83,7 +82,9 @@
         </main>
     </div>
 
-    <script>
+    <script type="module">
+        import MuxUploader from 'https://cdn.jsdelivr.net/npm/@mux/mux-uploader@1/dist/mux-uploader.mjs';
+
         document.addEventListener('DOMContentLoaded', () => {
             const modulesContainer = document.getElementById('modules-container');
             const addModuleBtn = document.getElementById('add-module-btn');
@@ -94,6 +95,7 @@
             const createLessonElement = (lesson) => {
                 const li = document.createElement('li');
                 li.className = 'lesson-item';
+                li.dataset.muxAssetId = lesson.muxAssetId || '';
                 li.innerHTML = `
                     <div class="flex-grow flex items-center gap-3">
                          <svg class="w-5 h-5 text-purple-400 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" /></svg>
@@ -129,10 +131,23 @@
                             <ul class="lesson-item-container space-y-2 mb-4"></ul>
                             <div class="add-lesson-form bg-gray-900/50 p-4 rounded-md hidden">
                                 <input type="text" class="lesson-title-input w-full bg-gray-800 border-gray-600 rounded-md p-2 mb-3" placeholder="Enter New Lesson Title">
-                             <mux-uploader
-                            class="w-full bg-gray-900/60 text-white p-4 rounded-md" id="mux-uploader"
-                            endpoint=""
-                            ></mux-uploader>
+                                <div class="dropzone" tabindex="0">
+                                    <input type="file" class="hidden" accept="video/mp4,video/webm,video/mov">
+                                    <div class="dz-message text-gray-400">
+                                        <svg class="w-10 h-10 mx-auto mb-2 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                                        <p class="font-bold">Drag & drop a video file</p>
+                                        <p class="text-sm">or click to select file</p>
+                                    </div>
+                                </div>
+                                <div class="upload-progress-container mt-3 hidden">
+                                    <div class="flex justify-between items-center mb-1">
+                                      <p class="upload-status-text text-sm text-gray-400">Uploading...</p>
+                                      <p class="upload-percentage-text text-sm text-gray-400">0%</p>
+                                    </div>
+                                    <div class="w-full bg-gray-700 rounded-full h-2.5">
+                                        <div class="upload-progress-bar bg-purple-600 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+                                    </div>
+                                </div>
                                 <div class="flex gap-2 mt-4">
                                     <button type="button" class="cancel-add-lesson-btn w-full text-sm bg-gray-600/50 hover:bg-gray-600/80 text-gray-300 font-semibold py-2 px-4 rounded-md transition-colors">Cancel</button>
                                     <button type="button" class="save-new-lesson-btn w-full text-sm bg-purple-700/80 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-md transition-colors">Save Lesson</button>
@@ -166,29 +181,7 @@
                 modulesContainer.innerHTML = '';
                 staticCourse.modules.forEach(module => createModuleElement(module));
             };
-async function setupMuxUploader() {
-  try {
-    const response = await fetch('/.netlify/functions/createUploadUrl', { method: 'POST' });
-    const { url } = await response.json();
-    const uploader = document.getElementById('mux-uploader');
-    uploader.setAttribute('endpoint', url);
 
-    uploader.addEventListener('uploadstart', () => {
-      console.log('Uploading started...');
-    });
-
-    uploader.addEventListener('success', (e) => {
-      const assetId = e.detail.asset_id;
-      console.log('Video uploaded! Asset ID:', assetId);
-      // Here you can attach assetId to your lesson object or send it to Supabase
-    });
-  } catch (err) {
-    alert('Failed to get Mux upload URL.');
-    console.error(err);
-  }
-}
-
-setupMuxUploader();
             const handleFileSelect = (dropzone, files) => {
                 if (files.length === 0) return;
                 const file = files[0];
@@ -198,47 +191,162 @@ setupMuxUploader();
                     return;
                 }
                 dropzone.querySelector('.dz-message').innerHTML = `<p class="font-bold text-purple-400">File Ready:</p><p class="text-sm text-white truncate">${file.name}</p>`;
+                // Associate file with the hidden input
+                const fileInput = dropzone.querySelector('input[type="file"]');
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(file);
+                fileInput.files = dataTransfer.files;
+            };
+
+            const resetLessonForm = (form) => {
+                const titleInput = form.querySelector('.lesson-title-input');
+                const fileInput = form.querySelector('input[type="file"]');
+                const dropzone = form.querySelector('.dropzone');
+                const progressContainer = form.querySelector('.upload-progress-container');
+                const saveButton = form.querySelector('.save-new-lesson-btn');
+                const cancelButton = form.querySelector('.cancel-add-lesson-btn');
+                
+                titleInput.value = '';
+                fileInput.value = null;
+
+                dropzone.querySelector('.dz-message').innerHTML = `
+                    <svg class="w-10 h-10 mx-auto mb-2 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                    <p class="font-bold">Drag & drop a video file</p>
+                    <p class="text-sm">or click to select file</p>
+                `;
+                
+                progressContainer.classList.add('hidden');
+                progressContainer.querySelector('.upload-progress-bar').style.width = '0%';
+                progressContainer.querySelector('.upload-status-text').textContent = 'Uploading...';
+                progressContainer.querySelector('.upload-progress-bar').classList.remove('bg-green-500', 'bg-red-500');
+                progressContainer.querySelector('.upload-progress-bar').classList.add('bg-purple-600');
+                
+                titleInput.disabled = false;
+                saveButton.disabled = false;
+                cancelButton.disabled = false;
+                dropzone.style.pointerEvents = 'auto';
+
+                form.classList.add('hidden');
+                form.nextElementSibling.classList.remove('hidden');
             };
 
             const handleContainerClick = (e) => {
                 const target = e.target;
-                const action = target.closest('button')?.className || '';
+                const button = target.closest('button');
 
-                if (action.includes('delete-lesson-btn')) {
-                     if (confirm('Are you sure you want to delete this lesson?')) {
-                        target.closest('.lesson-item').remove();
+                if (button) {
+                    if (button.classList.contains('delete-lesson-btn')) {
+                        if (confirm('Are you sure you want to delete this lesson?')) button.closest('.lesson-item').remove();
+                        return;
                     }
-                } else if (action.includes('delete-module-btn')) {
-                    if (confirm('Are you sure you want to delete this module and all its lessons?')) {
-                        target.closest('.module-card').remove();
+                    if (button.classList.contains('delete-module-btn')) {
+                        if (confirm('Are you sure you want to delete this module?')) button.closest('.module-card').remove();
+                        return;
                     }
-                } else if (action.includes('show-add-lesson-form-btn')) {
-                    target.classList.add('hidden');
-                    target.previousElementSibling.classList.remove('hidden');
-                } else if (action.includes('cancel-add-lesson-btn')) {
-                    const form = target.closest('.add-lesson-form');
-                    form.classList.add('hidden');
-                    form.nextElementSibling.classList.remove('hidden');
-                } else if (action.includes('save-new-lesson-btn')) {
-                    alert('Saving is disabled. No database connected.');
-                } else if (target.closest('.dropzone')) {
-                    target.closest('.dropzone').querySelector('input[type="file"]').click();
+                    if (button.classList.contains('show-add-lesson-form-btn')) {
+                        button.classList.add('hidden');
+                        button.previousElementSibling.classList.remove('hidden');
+                        return;
+                    }
+                    if (button.classList.contains('cancel-add-lesson-btn')) {
+                        const form = button.closest('.add-lesson-form');
+                        resetLessonForm(form);
+                        return;
+                    }
+                    if (button.classList.contains('save-new-lesson-btn')) {
+                        const form = button.closest('.add-lesson-form');
+                        const titleInput = form.querySelector('.lesson-title-input');
+                        const fileInput = form.querySelector('input[type="file"]');
+                        
+                        const title = titleInput.value.trim();
+                        const file = fileInput.files[0];
+
+                        if (!title) { alert('Please enter a lesson title.'); titleInput.focus(); return; }
+                        if (!file) { alert('Please select a video file.'); return; }
+
+                        const progressContainer = form.querySelector('.upload-progress-container');
+                        const progressBar = form.querySelector('.upload-progress-bar');
+                        const statusText = form.querySelector('.upload-status-text');
+                        const percentageText = form.querySelector('.upload-percentage-text');
+                        const saveButton = form.querySelector('.save-new-lesson-btn');
+                        const cancelButton = form.querySelector('.cancel-add-lesson-btn');
+                        const dropzone = form.querySelector('.dropzone');
+
+                        titleInput.disabled = true;
+                        saveButton.disabled = true;
+                        cancelButton.disabled = true;
+                        dropzone.style.pointerEvents = 'none';
+                        progressContainer.classList.remove('hidden');
+                        statusText.textContent = 'Initializing...';
+                        percentageText.textContent = '0%';
+
+                        console.log('Uploading started...');
+                        const uploader = new MuxUploader({
+                            endpoint: '/api/createUploadUrl',
+                            file: file,
+                            chunkSize: 5120, // 5MB
+                        });
+
+                        uploader.on('progress', (event) => {
+                            const progress = Math.floor(event.detail);
+                            progressBar.style.width = `${progress}%`;
+                            percentageText.textContent = `${progress}%`;
+                            statusText.textContent = `Uploading...`;
+                        });
+
+                        uploader.on('success', (event) => {
+                            console.log('Upload successful!', event.detail);
+                            statusText.textContent = 'Upload Complete!';
+                            progressBar.classList.remove('bg-purple-600');
+                            progressBar.classList.add('bg-green-500');
+
+                            const lessonContainer = form.closest('.module-card').querySelector('.lesson-item-container');
+                            const newLesson = {
+                                title: title,
+                                videoFileName: file.name,
+                                muxAssetId: event.detail?.passthrough_id,
+                            };
+                            lessonContainer.appendChild(createLessonElement(newLesson));
+                            
+                            setTimeout(() => resetLessonForm(form), 1000);
+                        });
+
+                        uploader.on('error', (event) => {
+                            console.error('Upload error:', event.detail);
+                            statusText.textContent = `Upload Failed.`;
+                            progressBar.classList.remove('bg-purple-600');
+                            progressBar.classList.add('bg-red-500');
+                            alert(`Upload failed: ${event.detail.message}. Check the console and ensure your backend endpoint at /api/createUploadUrl is correctly configured.`);
+                            
+                            titleInput.disabled = false;
+                            saveButton.disabled = false;
+                            cancelButton.disabled = false;
+                            dropzone.style.pointerEvents = 'auto';
+                        });
+                        
+                        return;
+                    }
                 }
+
+                const dropzone = target.closest('.dropzone');
+                if (dropzone) dropzone.querySelector('input[type="file"]').click();
             };
             
-            // Initial render
             renderInitialState();
 
-            // Event Listeners
             addModuleBtn.addEventListener('click', () => createModuleElement({ title: 'New Module', lessons: [] }));
-            saveChangesBtn.addEventListener('click', () => alert('Saving is disabled. No database connected.'));
+            
+            saveChangesBtn.addEventListener('click', () => {
+                alert('Course changes saved successfully! (Frontend simulation)');
+            });
 
             thumbnailUpload.addEventListener('change', () => {
                 const file = thumbnailUpload.files[0];
-                if (!file) return;
-                const reader = new FileReader();
-                reader.onload = (e) => { thumbnailPreview.src = e.target.result; };
-                reader.readAsDataURL(file);
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => { thumbnailPreview.src = e.target.result; };
+                    reader.readAsDataURL(file);
+                }
             });
             
             modulesContainer.addEventListener('click', handleContainerClick);
