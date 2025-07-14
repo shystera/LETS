@@ -112,51 +112,66 @@
             };
 
             const setupUploader = (uploader) => {
-                const addLessonForm = uploader.closest('.add-lesson-form');
-                const titleInput = addLessonForm.querySelector('.lesson-title-input');
-                const moduleCard = uploader.closest('.module-card');
-                const lessonContainer = moduleCard.querySelector('.lesson-item-container');
+    const addLessonForm = uploader.closest('.add-lesson-form');
+    const titleInput = addLessonForm.querySelector('.lesson-title-input');
+    const moduleCard = uploader.closest('.module-card');
+    const lessonContainer = moduleCard.querySelector('.lesson-item-container');
 
-                uploader.addEventListener('uploadstart', (event) => {
-                    const title = titleInput.value.trim();
-                    if (!title) {
-                        alert('Please enter a lesson title before selecting a video.');
-                        event.preventDefault();
-                        return;
-                    }
-                    titleInput.disabled = true;
-                });
+    uploader.addEventListener('uploadstart', async (event) => {
+        const title = titleInput.value.trim();
+        if (!title) {
+            alert('Please enter a lesson title before selecting a video.');
+            event.preventDefault();
+            return;
+        }
+        titleInput.disabled = true;
 
-                uploader.addEventListener('success', (event) => {
-                    const newLesson = {
-                        title: titleInput.value.trim(),
-                        videoFileName: uploader.file?.name || 'video_file',
-                        muxUploadId: event.detail?.id || 'unknown_upload_id',
-                    };
-                    lessonContainer.appendChild(createLessonElement(newLesson));
+        // Fetch Mux upload URL dynamically
+        try {
+            const res = await fetch('/.netlify/functions/createUploadUrl');
+            const data = await res.json();
+            const uploadUrl = data.url;
 
-                    // Reset for next upload
-                    titleInput.value = '';
-                    titleInput.disabled = false;
-                    
-                    // To reset the uploader component, we replace it with a fresh instance.
-                    const newUploader = document.createElement('mux-uploader');
-                    newUploader.setAttribute('endpoint', '/api/createUploadUrl');
-                    uploader.replaceWith(newUploader);
-                    
-                    // Wire up the new uploader instance
-                    setupUploader(newUploader);
-                    
-                    // Hide form after successful upload
-                    addLessonForm.classList.add('hidden');
-                    addLessonForm.nextElementSibling.classList.remove('hidden');
-                });
+            // Replace uploader with a fresh one using the actual upload URL
+            const newUploader = document.createElement('mux-uploader');
+            newUploader.setAttribute('endpoint', uploadUrl);
+            uploader.replaceWith(newUploader);
 
-                uploader.addEventListener('error', (e) => {
-                    titleInput.disabled = false;
-                    alert(`Upload error: ${e.detail?.message}. Check the console and ensure your backend is correctly configured.`);
-                });
-            };
+            // Start upload with new uploader and file
+            newUploader.file = uploader.file;
+            setupUploader(newUploader); // Wire it again
+        } catch (err) {
+            console.error('Error fetching upload URL:', err);
+            alert('Failed to fetch upload URL. Please check your backend function.');
+        }
+
+        event.preventDefault(); // stop the original upload attempt
+    });
+
+    uploader.addEventListener('success', (event) => {
+        const newLesson = {
+            title: titleInput.value.trim(),
+            videoFileName: uploader.file?.name || 'video_file',
+            muxUploadId: event.detail?.id || 'unknown_upload_id',
+        };
+        lessonContainer.appendChild(createLessonElement(newLesson));
+
+        titleInput.value = '';
+        titleInput.disabled = false;
+
+        const newUploader = document.createElement('mux-uploader');
+        uploader.replaceWith(newUploader);
+        setupUploader(newUploader);
+
+        addLessonForm.classList.add('hidden');
+        addLessonForm.nextElementSibling.classList.remove('hidden');
+    });
+
+    uploader.addEventListener('error', (e) => {
+        titleInput.disabled = false;
+        alert(`Upload error: ${e.detail?.message}. Check the console and ensure your backend is correctly configured.`);
+    });
+};
             
             const createModuleElement = (module) => {
                 const div = document.createElement('div');
