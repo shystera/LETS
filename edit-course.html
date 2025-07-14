@@ -83,7 +83,7 @@
     </div>
 
     <script type="module">
-        import MuxUploader from 'https://cdn.jsdelivr.net/npm/@mux/mux-uploader@1/dist/mux-uploader.mjs';
+        import 'https://cdn.jsdelivr.net/npm/@mux/mux-uploader@1/dist/mux-uploader.mjs';
 
         document.addEventListener('DOMContentLoaded', () => {
             const modulesContainer = document.getElementById('modules-container');
@@ -281,7 +281,8 @@
                         percentageText.textContent = '0%';
 
                         console.log('Uploading started...');
-                        const uploader = new MuxUploader();
+                        const uploader = document.createElement('mux-uploader');
+                        uploader.style.display = 'none';
 
                         uploader.addEventListener('progress', (event) => {
                             const progress = Math.floor(event.detail);
@@ -304,6 +305,7 @@
                             };
                             lessonContainer.appendChild(createLessonElement(newLesson));
                             
+                            uploader.remove();
                             setTimeout(() => resetLessonForm(form), 1000);
                         });
 
@@ -312,16 +314,19 @@
                             statusText.textContent = `Upload Failed.`;
                             progressBar.classList.remove('bg-purple-600');
                             progressBar.classList.add('bg-red-500');
-                            alert(`Upload failed: ${event.detail.message}. Check the console and ensure your backend endpoint at /api/createUploadUrl is correctly configured.`);
+                            alert(`Upload failed: ${event.detail?.message}. Check the console and ensure your backend endpoint at /api/createUploadUrl is correctly configured.`);
                             
                             titleInput.disabled = false;
                             saveButton.disabled = false;
                             cancelButton.disabled = false;
                             dropzone.style.pointerEvents = 'auto';
+                            uploader.remove();
                         });
                         
                         uploader.endpoint = '/api/createUploadUrl';
                         uploader.chunkSize = 5120; // 5MB
+                        
+                        form.appendChild(uploader);
                         uploader.file = file; // This triggers the upload
                         
                         return;
