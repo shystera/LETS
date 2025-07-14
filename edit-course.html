@@ -281,20 +281,16 @@
                         percentageText.textContent = '0%';
 
                         console.log('Uploading started...');
-                        const uploader = new MuxUploader({
-                            endpoint: '/api/createUploadUrl',
-                            file: file,
-                            chunkSize: 5120, // 5MB
-                        });
+                        const uploader = new MuxUploader();
 
-                        uploader.on('progress', (event) => {
+                        uploader.addEventListener('progress', (event) => {
                             const progress = Math.floor(event.detail);
                             progressBar.style.width = `${progress}%`;
                             percentageText.textContent = `${progress}%`;
                             statusText.textContent = `Uploading...`;
                         });
 
-                        uploader.on('success', (event) => {
+                        uploader.addEventListener('success', (event) => {
                             console.log('Upload successful!', event.detail);
                             statusText.textContent = 'Upload Complete!';
                             progressBar.classList.remove('bg-purple-600');
@@ -304,14 +300,14 @@
                             const newLesson = {
                                 title: title,
                                 videoFileName: file.name,
-                                muxAssetId: event.detail?.passthrough_id,
+                                muxAssetId: event.detail?.passthrough,
                             };
                             lessonContainer.appendChild(createLessonElement(newLesson));
                             
                             setTimeout(() => resetLessonForm(form), 1000);
                         });
 
-                        uploader.on('error', (event) => {
+                        uploader.addEventListener('error', (event) => {
                             console.error('Upload error:', event.detail);
                             statusText.textContent = `Upload Failed.`;
                             progressBar.classList.remove('bg-purple-600');
@@ -323,6 +319,10 @@
                             cancelButton.disabled = false;
                             dropzone.style.pointerEvents = 'auto';
                         });
+                        
+                        uploader.endpoint = '/api/createUploadUrl';
+                        uploader.chunkSize = 5120; // 5MB
+                        uploader.file = file; // This triggers the upload
                         
                         return;
                     }
