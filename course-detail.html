@@ -1,0 +1,137 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Course Details - Kohza</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="course-detail.css">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Playfair Display', 'serif'],
+                    },
+                    colors: {
+                        purple: {
+                            DEFAULT: '#9333ea', '50': '#faf5ff', '100': '#f3e8ff', '200': '#e9d5ff', '300': '#d8b4fe', '400': '#c084fc', '500': '#a855f7', '600': '#9333ea', '700': '#7e22ce', '800': '#6b21a8', '900': '#581c87', '950': '#3b0764'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="antialiased">
+    <div class="fixed top-0 left-0 w-full h-full overflow-hidden -z-10">
+        <div class="absolute w-[60vmax] h-[60vmax] -left-[30vmax] -top-[30vmax] bg-purple-900/30 rounded-full blur-3xl opacity-40"></div>
+    </div>
+    
+    <div class="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <header class="mb-8 flex justify-between items-center">
+             <a href="student-panel.html" class="text-gray-300 hover:text-white transition-colors flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>
+                Back to Dashboard
+            </a>
+             <div class="flex items-center gap-4">
+                 <img src="https://i.pravatar.cc/40?u=student" alt="User Avatar" class="w-10 h-10 rounded-full border-2 border-gray-700">
+             </div>
+        </header>
+
+        <main id="course-content" class="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
+            <!-- Left Column: Course Info -->
+            <div class="lg:col-span-1">
+                <img id="course-image" src="https://images.unsplash.com/photo-1518976024611-28bf4b48262e?q=80&w=800&auto=format&fit=crop" alt="Course Image" class="w-full rounded-lg shadow-lg shadow-purple-950/30 border border-gray-800 mb-6">
+                <h1 id="course-title" class="text-4xl font-serif font-bold text-white">The Art of Stoic Resilience</h1>
+                <p id="course-coach" class="text-lg text-gray-400 mt-2">by Marcus Aurelius</p>
+                <div class="mt-8">
+                    <a id="start-learning-btn" href="lesson-player.html?courseId=1&lessonId=101" class="w-full block text-center bg-purple-700 text-white font-bold px-6 py-3 text-lg rounded-md hover:bg-purple-600 transition-colors duration-300">
+                        Start Learning
+                    </a>
+                </div>
+            </div>
+
+            <!-- Right Column: Modules & Lessons -->
+            <div id="modules-container" class="lg:col-span-2 space-y-4">
+                <div class="module bg-gray-900/50 border border-gray-800 rounded-lg overflow-hidden open">
+                    <div class="module-header flex justify-between items-center p-5 cursor-pointer hover:bg-gray-800/60 transition-colors">
+                        <h2 class="text-2xl font-serif text-white">Module 1: The Foundation</h2>
+                        <svg class="arrow-icon w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                    </div>
+                    <div class="module-content border-t border-gray-700/50">
+                        <ul class="divide-y divide-gray-800">
+                            <li class="lesson-item flex items-center justify-between p-4 completed">
+                                <a href="lesson-player.html?courseId=1&lessonId=101" class="flex items-center gap-4 group">
+                                    <div class="text-purple-500">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                                    </div>
+                                    <span class="lesson-title text-gray-300 group-hover:text-white transition-colors">Introduction to Stoicism</span>
+                                </a>
+                                <span class="text-sm text-gray-500">12:34</span>
+                            </li>
+                            <li class="lesson-item flex items-center justify-between p-4">
+                                <a href="lesson-player.html?courseId=1&lessonId=102" class="flex items-center gap-4 group">
+                                    <div class="text-purple-500">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-500 group-hover:text-purple-400 transition-colors" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path></svg>
+                                    </div>
+                                    <span class="lesson-title text-gray-300 group-hover:text-white transition-colors">The Dichotomy of Control</span>
+                                </a>
+                                <span class="text-sm text-gray-500">15:02</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                 <div class="module bg-gray-900/50 border border-gray-800 rounded-lg overflow-hidden">
+                    <div class="module-header flex justify-between items-center p-5 cursor-pointer hover:bg-gray-800/60 transition-colors">
+                        <h2 class="text-2xl font-serif text-white">Module 2: Practical Application</h2>
+                        <svg class="arrow-icon w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                    </div>
+                    <div class="module-content border-t border-gray-700/50">
+                         <ul class="divide-y divide-gray-800">
+                            <li class="lesson-item flex items-center justify-between p-4">
+                                <a href="#" class="flex items-center gap-4 group">
+                                    <div class="text-purple-500">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-500 group-hover:text-purple-400 transition-colors" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path></svg>
+                                    </div>
+                                    <span class="lesson-title text-gray-300 group-hover:text-white transition-colors">Negative Visualization</span>
+                                </a>
+                                <span class="text-sm text-gray-500">18:50</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const modulesContainer = document.getElementById('modules-container');
+            
+            const addAccordionListeners = () => {
+                modulesContainer.addEventListener('click', (e) => {
+                    const header = e.target.closest('.module-header');
+                    if (header) {
+                        const module = header.parentElement;
+                        module.classList.toggle('open');
+                    }
+                });
+            };
+
+            addAccordionListeners();
+
+            document.addEventListener('contextmenu', event => event.preventDefault());
+        });
+    </script>
+</body>
+</html>
