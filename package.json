@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "@mux/mux-uploader": "^1.2.0"
+  }
+}
