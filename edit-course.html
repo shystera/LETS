@@ -29,6 +29,7 @@
             }
         }
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/@mux/mux-uploader"></script>
 </head>
 <body class="antialiased">
     <div class="fixed top-0 left-0 w-full h-full overflow-hidden -z-10">
@@ -128,14 +129,10 @@
                             <ul class="lesson-item-container space-y-2 mb-4"></ul>
                             <div class="add-lesson-form bg-gray-900/50 p-4 rounded-md hidden">
                                 <input type="text" class="lesson-title-input w-full bg-gray-800 border-gray-600 rounded-md p-2 mb-3" placeholder="Enter New Lesson Title">
-                                <div class="dropzone" tabindex="0">
-                                    <input type="file" class="hidden" accept="video/mp4,video/webm,video/mov">
-                                    <div class="dz-message text-gray-400">
-                                        <svg class="w-10 h-10 mx-auto mb-2 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
-                                        <p class="font-bold">Drag & drop a video file</p>
-                                        <p class="text-sm">or click to select file</p>
-                                    </div>
-                                </div>
+                             <mux-uploader
+                            class="w-full bg-gray-900/60 text-white p-4 rounded-md" id="mux-uploader"
+                            endpoint=""
+                            ></mux-uploader>
                                 <div class="flex gap-2 mt-4">
                                     <button type="button" class="cancel-add-lesson-btn w-full text-sm bg-gray-600/50 hover:bg-gray-600/80 text-gray-300 font-semibold py-2 px-4 rounded-md transition-colors">Cancel</button>
                                     <button type="button" class="save-new-lesson-btn w-full text-sm bg-purple-700/80 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-md transition-colors">Save Lesson</button>
@@ -169,7 +166,29 @@
                 modulesContainer.innerHTML = '';
                 staticCourse.modules.forEach(module => createModuleElement(module));
             };
+async function setupMuxUploader() {
+  try {
+    const response = await fetch('/.netlify/functions/createUploadUrl', { method: 'POST' });
+    const { url } = await response.json();
+    const uploader = document.getElementById('mux-uploader');
+    uploader.setAttribute('endpoint', url);
 
+    uploader.addEventListener('uploadstart', () => {
+      console.log('Uploading started...');
+    });
+
+    uploader.addEventListener('success', (e) => {
+      const assetId = e.detail.asset_id;
+      console.log('Video uploaded! Asset ID:', assetId);
+      // Here you can attach assetId to your lesson object or send it to Supabase
+    });
+  } catch (err) {
+    alert('Failed to get Mux upload URL.');
+    console.error(err);
+  }
+}
+
+setupMuxUploader();
             const handleFileSelect = (dropzone, files) => {
                 if (files.length === 0) return;
                 const file = files[0];
